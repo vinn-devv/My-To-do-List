@@ -1,103 +1,92 @@
-/*========= TO-DO LIST ======== */
-let inputElement = document.querySelector(".task");
-let buttonElement = document.querySelector(".add");
-let listElement = document.querySelector(".list");
-let remainingElement = document.querySelector(".remaining");
+const inputElement = document.querySelector(".task");
+const buttonElement = document.querySelector(".add");
+const listElement = document.querySelector(".list");
+const badgeElement = document.querySelector(".remaining-badge");
+const emptyState = document.querySelector(".empty-state");
 
 let tasks = [];
 
-// Load saved tasks
-let savedTasks = localStorage.getItem("tasks");
-
+const savedTasks = localStorage.getItem("tasks");
 if (savedTasks) {
   tasks = JSON.parse(savedTasks);
 }
 
-// Create task
-function createTask(task, index) {
-  let newTask = document.createElement("li");
+function saveTasks() {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}
 
-  newTask.textContent = task.title;
+function updateUI() {
+  const remaining = tasks.filter(t => !t.completed).length;
+  badgeElement.textContent = remaining + " remaining";
+  emptyState.classList.toggle("visible", tasks.length === 0);
+}
 
-  // Show completed status after refresh
-  if (task.completed) {
-    newTask.classList.add("completed");
+function renderAll() {
+  listElement.innerHTML = "";
+  for (let i = 0; i < tasks.length; i++) {
+    createTask(tasks[i], i);
   }
+  updateUI();
+}
 
-  listElement.appendChild(newTask);
+function createTask(task, index) {
+  const li = document.createElement("li");
+  if (task.completed) li.classList.add("completed");
+
+  // Checkmark circle
+  const check = document.createElement("span");
+  check.className = "task-check";
+  li.appendChild(check);
+
+  // Title
+  const title = document.createElement("span");
+  title.className = "task-title";
+  title.textContent = task.title;
+  li.appendChild(title);
 
   // Delete button
-  let buttonTask = document.createElement("button");
+  const deleteBtn = document.createElement("button");
+  deleteBtn.className = "delete-btn";
+  deleteBtn.textContent = "×";
+  deleteBtn.setAttribute("aria-label", "Delete task");
+  li.appendChild(deleteBtn);
 
-  buttonTask.textContent = "❌";
-
-  newTask.appendChild(buttonTask);
-
-  buttonTask.addEventListener("click", function () {
+  // Delete — stop propagation so it doesn't trigger complete
+  deleteBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
     tasks.splice(index, 1);
-
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-
-    listElement.innerHTML = "";
-
-    for (let i = 0; i < tasks.length; i++) {
-      createTask(tasks[i], i);
-    }
-
-    updateRemainingTask();
+    saveTasks();
+    renderAll();
   });
 
-  // Complete task
-  newTask.addEventListener("click", function () {
+  // Toggle complete
+  li.addEventListener("click", function () {
     tasks[index].completed = !tasks[index].completed;
-
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-
-    newTask.classList.toggle("completed");
-
-    updateRemainingTask();
+    saveTasks();
+    li.classList.toggle("completed");
+    updateUI();
   });
+
+  listElement.appendChild(li);
 }
 
-// Display saved tasks
-for (let i = 0; i < tasks.length; i++) {
-  createTask(tasks[i], i);
-}
+function addTask() {
+  const value = inputElement.value.trim();
+  if (value === "") return;
 
-updateRemainingTask();
-
-// Add task
-buttonElement.addEventListener("click", function () {
-  if (inputElement.value.trim() === "") {
-    return;
-  }
-
-  let newTask = {
-    title: inputElement.value,
-
-    completed: false,
-  };
-
-  tasks.push(newTask);
-
-  localStorage.setItem("tasks", JSON.stringify(tasks));
-
-  createTask(newTask, tasks.length - 1);
-
+  tasks.push({ title: value, completed: false });
+  saveTasks();
+  renderAll();
   inputElement.value = "";
+  inputElement.focus();
+}
 
-  updateRemainingTask();
+buttonElement.addEventListener("click", addTask);
+
+// Enter key support
+inputElement.addEventListener("keydown", function (e) {
+  if (e.key === "Enter") addTask();
 });
 
-// Remaining task counter
-function updateRemainingTask() {
-  let remaining = 0;
-
-  for (let i = 0; i < tasks.length; i++) {
-    if (!tasks[i].completed) {
-      remaining++;
-    }
-  }
-
-  remainingElement.textContent = "Remaining Task: " + remaining;
-}
+// Initial render
+renderAll();
