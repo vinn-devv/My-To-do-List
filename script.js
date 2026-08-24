@@ -1,14 +1,19 @@
 const inputElement = document.querySelector(".task");
 const buttonElement = document.querySelector(".add");
 const listElement = document.querySelector(".list");
-const badgeElement = document.querySelector(".remaining-badge");
-const emptyState = document.querySelector(".empty-state");
+const remainingNum = document.getElementById("remaining-num");
+const emptyState = document.getElementById("empty-state");
+const progressFill = document.getElementById("progress-fill");
+const clearBtn = document.getElementById("clear-btn");
+const orb = document.querySelector(".orb");
 
 let tasks = [];
 
+// Load tasks and FILTER OUT completed ones on page load
 const savedTasks = localStorage.getItem("tasks");
 if (savedTasks) {
-  tasks = JSON.parse(savedTasks);
+  const allTasks = JSON.parse(savedTasks);
+  tasks = allTasks.filter((t) => !t.completed);
 }
 
 function saveTasks() {
@@ -16,9 +21,21 @@ function saveTasks() {
 }
 
 function updateUI() {
-  const remaining = tasks.filter(t => !t.completed).length;
-  badgeElement.textContent = remaining + " remaining";
-  emptyState.classList.toggle("visible", tasks.length === 0);
+  const total = tasks.length;
+  const completed = tasks.filter((t) => t.completed).length;
+  const remaining = total - completed;
+
+  remainingNum.textContent = remaining;
+  remainingNum.classList.toggle("done", remaining === 0 && total > 0);
+
+  emptyState.classList.toggle("visible", total === 0);
+
+  const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
+  progressFill.style.width = pct + "%";
+
+  const intensity =
+    total === 0 ? 0.12 : Math.min(0.25, 0.08 + remaining * 0.02);
+  orb.style.background = `radial-gradient(ellipse at center, rgba(124,111,247,${intensity}) 0%, transparent 70%)`;
 }
 
 function renderAll() {
@@ -33,33 +50,33 @@ function createTask(task, index) {
   const li = document.createElement("li");
   if (task.completed) li.classList.add("completed");
 
-  // Checkmark circle
   const check = document.createElement("span");
   check.className = "task-check";
   li.appendChild(check);
 
-  // Title
   const title = document.createElement("span");
   title.className = "task-title";
   title.textContent = task.title;
   li.appendChild(title);
 
-  // Delete button
   const deleteBtn = document.createElement("button");
   deleteBtn.className = "delete-btn";
   deleteBtn.textContent = "×";
   deleteBtn.setAttribute("aria-label", "Delete task");
   li.appendChild(deleteBtn);
 
-  // Delete — stop propagation so it doesn't trigger complete
   deleteBtn.addEventListener("click", function (e) {
     e.stopPropagation();
-    tasks.splice(index, 1);
-    saveTasks();
-    renderAll();
+    li.style.opacity = "0";
+    li.style.transform = "translateX(8px)";
+    li.style.transition = "opacity 0.15s, transform 0.15s";
+    setTimeout(() => {
+      tasks.splice(index, 1);
+      saveTasks();
+      renderAll();
+    }, 150);
   });
 
-  // Toggle complete
   li.addEventListener("click", function () {
     tasks[index].completed = !tasks[index].completed;
     saveTasks();
@@ -81,12 +98,16 @@ function addTask() {
   inputElement.focus();
 }
 
+clearBtn.addEventListener("click", function () {
+  tasks = tasks.filter((t) => !t.completed);
+  saveTasks();
+  renderAll();
+});
+
 buttonElement.addEventListener("click", addTask);
 
-// Enter key support
 inputElement.addEventListener("keydown", function (e) {
   if (e.key === "Enter") addTask();
 });
 
-// Initial render
 renderAll();
