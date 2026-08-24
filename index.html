@@ -1,32 +1,66 @@
-
-Index · HTML
 <!doctype html>
-<html>
+<html lang="en">
   <head>
-    <title>To-Do List</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tasks</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
+    <div class="orb"></div>
+
     <div class="container">
       <div class="header">
-        <h1>My tasks</h1>
-        <span class="remaining-badge">0 remaining</span>
+        <div class="title-block">
+          <span class="label">to-do list</span>
+          <h1>Tasks</h1>
+        </div>
+        <div class="stats">
+          <span class="stat-num" id="remaining-num">0</span>
+          <span class="stat-label">left</span>
+        </div>
       </div>
- 
+
       <div class="input-row">
-        <input class="task" type="text" placeholder="Add a new task…" />
-        <button class="add">Add</button>
+        <input
+          class="task"
+          type="text"
+          placeholder="What needs to be done?"
+          autocomplete="off"
+        />
+        <button class="add" aria-label="Add task">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M8 2v12M2 8h12"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
       </div>
- 
-      <ul class="list"></ul>
- 
-      <p class="empty-state">No tasks yet. Add one above.</p>
+
+      <div class="list-wrapper">
+        <ul class="list"></ul>
+        <div class="empty-state" id="empty-state">
+          <p>Nothing here yet</p>
+        </div>
+      </div>
+
+      <div class="footer">
+        <button class="clear-btn" id="clear-btn">Clear completed</button>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+      </div>
     </div>
- 
+
     <script src="script.js"></script>
   </body>
 </html>
- 
